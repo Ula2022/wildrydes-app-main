@@ -30,7 +30,6 @@ Resources:
       BranchName: main
       EnableAutoBuild: true
       Framework: Web
-  ###############################################################
 
   ############ Module 2 - Cognito - User Management #############
   WildRydesUserPool:
@@ -49,7 +48,6 @@ Resources:
       ClientName: WildRydesWeb
       UserPoolId: !Ref WildRydesUserPool
       GenerateSecret: false
-  ################################################################
 
   ############ Module 3 - DynamoDB - Database ####################
   WildrydesDynamoDB:
