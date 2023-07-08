@@ -2,7 +2,7 @@ name: 'Deploy to AWS CloudFormation'
 
 on:
   push:
-    branches: [ main]
+    branches: [ master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -36,7 +36,7 @@ jobs:
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: >-
             AccessToken=${{ secrets.ACCESS_TOKEN }},
-            Repository=https://github.com/Ula2022/wildrydes-app-main
+            Repository=https://github.com/Ula2022/wildrydes-site
 
       # Grab stack outputs
       - name: Grab stack outputs
@@ -58,7 +58,7 @@ jobs:
           git config --global user.email "oogunlesi2002@yahoo.co.uk"
           git config --global user.name "Olakunle Ogunlesi"
 
-          echo "machine github.com login oogunlesi2002 password ${{ secrets.ACCESS_TOKEN }}" > ~/.netrc
+          echo "machine github.com login Ula2022 password ${{ secrets.ACCESS_TOKEN }}" > ~/.netrc
 
           git clone https://github.com/Ula2022/wildrydes-site.git
           cd wildrydes-site
