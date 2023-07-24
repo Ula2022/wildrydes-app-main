@@ -7,6 +7,13 @@ Parameters:
   AccessToken:
     Description: GitHub Personal Access Token for Amplify
     Type: String
+  
+
+    Description: RestApi for WildRydes
+    apiName:
+      Type: WildRydes
+    type:
+      Type: Edge optimized
 
   Repository:
     Description: WildRydes site GitHub Repository
@@ -49,6 +56,27 @@ Resources:
       UserPoolId: !Ref WildRydesUserPool
       GenerateSecret: false
 
+     ############Rest API##################################
+  MyRestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      EndpointConfiguration:
+       Types:
+         - !Ref type
+     Name: !Ref apiName
+
+      CacheDataEncrypted: Boolean
+      HttpMethod: String
+      LoggingLevel: String
+      MetricsEnabled: Boolean
+      ResourcePath: String
+      ThrottlingBurstLimit: Integer
+      ThrottlingRateLimit: Double
+
+
+
+
+
   ############ Module 3 - DynamoDB - Database ####################
   WildrydesDynamoDB:
     Type: AWS::DynamoDB::Table
@@ -87,6 +115,7 @@ Resources:
                 Action:
                   - dynamodb:PutItem
                 Resource: !GetAtt WildrydesDynamoDB.Arn
+             
 
   ########### Lambda Function #############################
   WildRydesLambdaFunction:
@@ -216,6 +245,94 @@ Resources:
               },
             });
           }
+          
+  ######################## APIGW REST API ######################
+  WildRydesApiGateWayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: WildRydes App APIGW for Lambda Target
+      Name: WildRydes
+      EndpointConfiguration:
+        Types:
+          - "EDGE"
+  ###############################################################
+
+  ######################### APIGW Resource ######################
+  ApiGateWayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt WildRydesApiGateWayRestApi.RootResourceId
+      PathPart: 'ride'
+      RestApiId: !Ref WildRydesApiGateWayRestApi
+  #################################################################
+
+  ########################## APIGW Method #########################
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ResourceId: !Ref ApiGateWayResource
+      RestApiId: !Ref WildRydesApiGateWayRestApi
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref ApiGatewayAuthorizer
+      HttpMethod: POST
+      MethodResponses:
+        - StatusCode: 200
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WildRydesLambdaFunction.Arn}/invocations
+ ########################################################################
+
+ ######################## APIGW Cognito Authorizer ######################
+  ApiGatewayAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: WildRydesCognitoAuthorizer
+      Type: COGNITO_USER_POOLS
+      RestApiId: !Ref WildRydesApiGateWayRestApi
+      IdentitySource: method.request.header.Authorization
+      ProviderARNs:
+        - !GetAtt WildRydesUserPool.Arn
+  ##########################################################################
+
+  ############################### APIGW Deployment stage ###################
+  ApiGatewayDeploymentStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: prod
+      RestApiId: !Ref WildRydesApiGateWayRestApi
+      DeploymentId: !Ref ApiGatewayDeployment
+  ###########################################################################
+
+  ########################## APIGW Deployment #############################
+  ApiGatewayDeployment:
+    DependsOn:
+      - ApiGatewayMethod
+      - ApiGateWayResource
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref WildRydesApiGateWayRestApi
+  ###########################################################################
+
+  ############################### APIGW Lambda Permission ###################
+  ApiGatewayLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt WildRydesLambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:execute-api:'
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: WildRydesApiGateWayRestApi
+            - "/*/*/*"
+  #############################################################################
 
 Outputs:
   userPoolId:
