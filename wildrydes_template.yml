@@ -7,13 +7,6 @@ Parameters:
   AccessToken:
     Description: GitHub Personal Access Token for Amplify
     Type: String
-  
-
-    Description: RestApi for WildRydes
-    apiName:
-      Type: WildRydes
-    type:
-      Type: Edge optimized
 
   Repository:
     Description: WildRydes site GitHub Repository
@@ -56,28 +49,7 @@ Resources:
       UserPoolId: !Ref WildRydesUserPool
       GenerateSecret: false
 
-     ############Rest API##################################
-  MyRestApi:
-    Type: 'AWS::ApiGateway::RestApi'
-    Properties:
-      EndpointConfiguration:
-       Types:
-         - !Ref type
-     Name: !Ref apiName
-
-      CacheDataEncrypted: Boolean
-      HttpMethod: String
-      LoggingLevel: String
-      MetricsEnabled: Boolean
-      ResourcePath: String
-      ThrottlingBurstLimit: Integer
-      ThrottlingRateLimit: Double
-
-
-
-
-
-  ############ Module 3 - DynamoDB - Database ####################
+      ############ Module 3 - DynamoDB - Database ####################
   WildrydesDynamoDB:
     Type: AWS::DynamoDB::Table
     Properties:
